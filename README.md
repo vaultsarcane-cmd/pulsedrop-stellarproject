@@ -39,8 +39,8 @@ recipient's wallet with a clearly explained pending/success/failure receipt.
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/vaultsarcane-cmd/pulsedrop-stellar.git
-cd pulsedrop-stellar
+git clone https://github.com/vaultsarcane-cmd/pulsedrop-stellarproject.git
+cd pulsedrop-stellarproject
 
 # 2. Install dependencies
 npm install
@@ -91,23 +91,27 @@ handed to Freighter for signing, and only the signed envelope is submitted.
 
 ## Screenshots
 
-<!-- TODO: Replace the placeholders below with captured screenshots before submission. -->
-
 ![Wallet connected with balance](docs/screenshots/wallet-connected.png)
-_Pending capture: connected wallet showing abbreviated public key and XLM balance._
+_Freighter connected on Stellar Testnet with the public key and XLM balance visible._
 
 ![Payment form with preset selected](docs/screenshots/payment-preset.png)
-_Pending capture: Transit preset selected and recipient validated._
+_Transit assistance preset selected with a validated Testnet recipient._
+
+![Freighter transaction confirmation](docs/screenshots/payment-submitting.png)
+_Freighter confirmation and PulseDrop's submitting state during the live payment._
 
 ![Successful payment receipt](docs/screenshots/receipt-success.png)
-_Pending capture: success receipt with hash and explorer link._
+_Successful Testnet receipt with the transaction hash and explorer action._
+
+![Successful transaction on Stellar Expert](docs/screenshots/stellar-payment-hash.png)
+_The same payment independently verified as successful on Stellar Expert._
 
 ## Verified Example Transaction
 
 A real Testnet payment made during manual verification:
 
-- Transaction hash: `PENDING_MANUAL_VERIFICATION`
-- Explorer link: _to be added after running the live flow_
+- Transaction hash: `6c0b4e0ae29acdd89a3a701d170bab437827f2ee945f360594be32969c145bba`
+- Explorer link: [View the successful Testnet payment on Stellar Expert](https://stellar.expert/explorer/testnet/tx/6c0b4e0ae29acdd89a3a701d170bab437827f2ee945f360594be32969c145bba)
 
 ## Troubleshooting
 
