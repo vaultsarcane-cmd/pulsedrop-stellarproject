@@ -1,11 +1,12 @@
 import "./styles/tokens.css";
 import "./styles/app.css";
+import "./styles/components.css";
+import { useWallet } from "./hooks/useWallet";
+import { WalletCard } from "./components/WalletCard";
 
-/**
- * Temporary shell for milestone 1. Wallet, balance and payment sections
- * are added in later milestones.
- */
 export default function App() {
+  const wallet = useWallet();
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -33,7 +34,9 @@ export default function App() {
         </p>
       </header>
 
-      <main id="main" className="section-stack" />
+      <main id="main" className="section-stack">
+        <WalletCard wallet={wallet} onRefreshBalance={() => void wallet.refreshBalance()} />
+      </main>
     </div>
   );
 }
