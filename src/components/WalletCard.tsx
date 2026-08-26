@@ -140,7 +140,7 @@ export function WalletCard({ wallet, onRefreshBalance }: WalletCardProps) {
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={() => void wallet.connect()}
+            onClick={() => void wallet.retryNetworkCheck()}
           >
             Retry Testnet check
           </button>

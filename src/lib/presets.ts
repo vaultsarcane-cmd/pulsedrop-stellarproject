@@ -65,12 +65,26 @@ export function validatePaymentInput(
     errors.amount = `The amount cannot exceed ${MAX_AMOUNT} XLM.`;
   } else if (hasMoreThanSevenDecimals(amount)) {
     errors.amount = "Stellar supports at most 7 decimal places for XLM.";
-  } else if (balance !== null && parsedAmount >= Number.parseFloat(balance)) {
+  } else if (balance !== null && !leavesFeeHeadroom(amount, balance)) {
     errors.amount =
       "This amount leaves nothing for the network fee. Send a smaller amount or fund the account first.";
   }
 
   return errors;
+}
+
+/** Typical Testnet base fee in stroops per operation (0.00001 XLM). */
+const BASE_FEE_XLM = 0.00001;
+
+/**
+ * True when amount + base fee stays strictly below the current balance,
+ * so submission cannot fail with tx_insufficient_balance.
+ */
+function leavesFeeHeadroom(amount: string, balance: string): boolean {
+  const amountValue = Number.parseFloat(amount);
+  const balanceValue = Number.parseFloat(balance);
+  if (Number.isNaN(amountValue) || Number.isNaN(balanceValue)) return false;
+  return amountValue + BASE_FEE_XLM < balanceValue;
 }
 
 export const MAX_AMOUNT = 1000;
