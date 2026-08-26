@@ -77,6 +77,12 @@
   color: var(--pd-warn);
 }
 
+.notice-info {
+  background: rgba(90, 156, 255, 0.08);
+  border: 1px solid rgba(90, 156, 255, 0.4);
+  color: var(--pd-info, #5a9cff);
+}
+
 .notice-danger {
   background: rgba(255, 84, 112, 0.08);
   border: 1px solid rgba(255, 84, 112, 0.4);

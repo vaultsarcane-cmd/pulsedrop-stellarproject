@@ -1,13 +1,22 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   checkNetwork,
   connectWallet,
   getActivePublicKey,
+  waitForFreighter,
   type WalletErrorCode,
 } from "../services/freighter";
 import { fetchXlmBalance } from "../services/horizon";
 
+export type WalletPhase =
+  | "detecting"
+  | "unavailable"
+  | "disconnected"
+  | "connecting"
+  | "connected";
+
 export interface WalletState {
+  phase: WalletPhase;
   installed: boolean;
   publicKey: string | null;
   networkOk: boolean | null;
@@ -23,21 +32,17 @@ export interface WalletActions {
   disconnect: () => void;
   refreshBalance: () => Promise<void>;
   retryNetworkCheck: () => Promise<void>;
-}
-
-function detectInstallation(): boolean {
-  if (typeof window === "undefined") return false;
-  return Boolean((window as { freighter?: unknown }).freighter);
+  recheckWallet: () => void;
 }
 
 /**
- * Owns the Freighter lifecycle: installation probe, access request,
- * Testnet verification, XLM balance retrieval, and disconnect cleanup.
- * The initial render decides installation synchronously so guidance UI
- * appears without a flash of wrong state.
+ * Owns the Freighter lifecycle. Installation is resolved asynchronously
+ * through the official API with a bounded retry window, so a late content
+ * script injection never gets misread as "no wallet installed". The phase
+ * stays "detecting" (never "unavailable") until the deadline passes.
  */
 export function useWallet(): WalletState & WalletActions {
-  const [installed] = useState(detectInstallation);
+  const [phase, setPhase] = useState<WalletPhase>("detecting");
   const [publicKey, setPublicKey] = useState<string | null>(null);
   const [networkOk, setNetworkOk] = useState<boolean | null>(null);
   const [connecting, setConnecting] = useState(false);
@@ -46,56 +51,33 @@ export function useWallet(): WalletState & WalletActions {
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [balanceError, setBalanceError] = useState<string | null>(null);
 
-  // If the extension is present but the user already granted access in a
-  // previous session, pick the session back up. All state updates happen
-  // asynchronously after awaits, never synchronously in the effect body.
-  useEffect(() => {
-    let cancelled = false;
-    async function resumeSession() {
-      if (!detectInstallation()) {
-        return;
-      }
-      const existingKey = await getActivePublicKey();
-      if (cancelled) return;
-      if (existingKey) {
-        const net = await checkNetwork();
-        if (cancelled) return;
-        setPublicKey(existingKey);
-        setNetworkOk(net.ok);
-      }
-    }
-    void resumeSession();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Monotonic token so stale async work (StrictMode double-mount, retries,
+  // disconnect during flight) can never commit state after cancellation.
+  const runIdRef = useRef(0);
 
-  const refreshBalance = useCallback(
-    async (key: string) => {
-      setBalanceLoading(true);
-      setBalanceError(null);
-      const result = await fetchXlmBalance(key);
-      if (result.ok && result.balance !== undefined) {
-        setBalance(result.balance);
-      } else if (result.error === "ACCOUNT_NOT_FOUND") {
-        setBalance(null);
-        setBalanceError(
-          "This account is not funded yet. Request Testnet XLM from the friendbot faucet, then refresh.",
-        );
-      } else {
-        setBalanceError(
-          "Could not reach the Stellar Testnet to read your balance. Check your connection and try again.",
-        );
-      }
-      setBalanceLoading(false);
-    },
-    [],
-  );
+  const refreshBalance = useCallback(async (key: string) => {
+    setBalanceLoading(true);
+    setBalanceError(null);
+    const result = await fetchXlmBalance(key);
+    if (result.ok && result.balance !== undefined) {
+      setBalance(result.balance);
+    } else if (result.error === "ACCOUNT_NOT_FOUND") {
+      setBalance(null);
+      setBalanceError(
+        "This account is not funded yet. Request Testnet XLM from the friendbot faucet, then refresh.",
+      );
+    } else {
+      setBalanceError(
+        "Could not reach the Stellar Testnet to read your balance. Check your connection and try again.",
+      );
+    }
+    setBalanceLoading(false);
+  }, []);
 
   /** Load balance after the key/network pair becomes available. */
   const loadBalanceFor = useCallback(
     async (key: string, ok: boolean) => {
-      if (ok) {
+      if (ok && key) {
         await refreshBalance(key);
       } else {
         setBalance(null);
@@ -105,14 +87,46 @@ export function useWallet(): WalletState & WalletActions {
     [refreshBalance],
   );
 
+  const detectAndResume = useCallback(
+    async (runId: number) => {
+      setPhase("detecting");
+      setConnectionError(null);
+      const detection = await waitForFreighter();
+      if (runIdRef.current !== runId) return;
+
+      if (detection.status === "detected") {
+        setPhase("disconnected");
+        const existing = await getActivePublicKey();
+        if (runIdRef.current !== runId) return;
+        if (existing && "address" in existing) {
+          const net = await checkNetwork();
+          if (runIdRef.current !== runId) return;
+          setPublicKey(existing.address);
+          setNetworkOk(net.ok);
+          await loadBalanceFor(existing.address, net.ok);
+        }
+      } else {
+        setPhase("unavailable");
+      }
+    },
+    [loadBalanceFor],
+  );
+
+  // Initial detection + resume of an existing grant. The cleanup only
+  // invalidates in-flight work; re-running detection is idempotent, so a
+  // StrictMode double-invoke converges instead of looping.
+  useEffect(() => {
+    runIdRef.current += 1;
+    const runId = runIdRef.current;
+    void detectAndResume(runId);
+    return () => {
+      runIdRef.current += 1;
+    };
+  }, [detectAndResume]);
+
   const connect = useCallback(async () => {
     setConnecting(true);
     setConnectionError(null);
-
-    if (!detectInstallation()) {
-      setConnecting(false);
-      return;
-    }
 
     const access = await connectWallet();
     if (!access.ok || !access.publicKey) {
@@ -124,6 +138,7 @@ export function useWallet(): WalletState & WalletActions {
     const net = await checkNetwork();
     setPublicKey(access.publicKey);
     setNetworkOk(net.ok);
+    setPhase("connected");
     setConnecting(false);
     await loadBalanceFor(access.publicKey, net.ok);
   }, [loadBalanceFor]);
@@ -136,15 +151,28 @@ export function useWallet(): WalletState & WalletActions {
   }, [publicKey, loadBalanceFor]);
 
   const disconnect = useCallback(() => {
+    runIdRef.current += 1; // invalidate any in-flight work
     setPublicKey(null);
     setNetworkOk(null);
     setBalance(null);
     setBalanceError(null);
     setConnectionError(null);
+    setPhase("disconnected");
   }, []);
 
+  /**
+   * Manual recovery path: re-run detection after the user installs or
+   * unlocks Freighter without needing a full application reload.
+   */
+  const recheckWallet = useCallback(() => {
+    runIdRef.current += 1;
+    const runId = runIdRef.current;
+    void detectAndResume(runId);
+  }, [detectAndResume]);
+
   return {
-    installed,
+    phase,
+    installed: phase !== "unavailable",
     publicKey,
     networkOk,
     connecting,
@@ -160,5 +188,6 @@ export function useWallet(): WalletState & WalletActions {
       }
     },
     retryNetworkCheck,
+    recheckWallet,
   };
 }

@@ -12,6 +12,10 @@ interface WalletCardProps {
 const WALLET_ERROR_MESSAGES: Record<string, string> = {
   WALLET_NOT_DETECTED:
     "No Stellar wallet detected. Install the Freighter extension from freighter.app and reload this page.",
+  WALLET_LOCKED:
+    "Freighter is locked. Unlock the extension, then press Retry below.",
+  ACCESS_NOT_GRANTED:
+    "PulseDrop does not have access yet. Press Connect Freighter and approve the request.",
   ACCESS_REQUEST_REJECTED:
     "Connection request was dismissed. Click Connect again when you are ready to grant access.",
   ACCESS_REQUEST_FAILED:
@@ -20,6 +24,24 @@ const WALLET_ERROR_MESSAGES: Record<string, string> = {
     "Could not confirm which network Freighter is using. Open the extension and verify it is set to Testnet.",
 };
 
+/** Loading state shown while the bounded detection window is open. */
+function DetectingCard() {
+  return (
+    <section className="card" aria-labelledby="wallet-heading">
+      <h2 className="card-title" id="wallet-heading">
+        Wallet
+      </h2>
+      <p className="notice notice-info" role="status">
+        Checking for the Freighter extension...
+      </p>
+      <p style={{ marginBottom: 0 }}>
+        This only takes a moment. If Freighter was just installed or enabled,
+        it may still be starting up.
+      </p>
+    </section>
+  );
+}
+
 /**
  * Shows connection controls, network status, the abbreviated public key
  * with a copy action, and the live XLM balance.
@@ -27,7 +49,11 @@ const WALLET_ERROR_MESSAGES: Record<string, string> = {
 export function WalletCard({ wallet, onRefreshBalance }: WalletCardProps) {
   const { copied, copy } = useCopyToClipboard();
 
-  if (!wallet.installed) {
+  if (wallet.phase === "detecting") {
+    return <DetectingCard />;
+  }
+
+  if (wallet.phase === "unavailable") {
     return (
       <section className="card" aria-labelledby="wallet-heading">
         <h2 className="card-title" id="wallet-heading">
@@ -43,6 +69,13 @@ export function WalletCard({ wallet, onRefreshBalance }: WalletCardProps) {
           </a>
           , create or import a Testnet account, then reload this page.
         </p>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={wallet.recheckWallet}
+        >
+          Recheck for wallet
+        </button>
       </section>
     );
   }
