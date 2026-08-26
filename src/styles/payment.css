@@ -1,0 +1,78 @@
+/* PulseDrop preset cards and payment form styles. */
+
+.preset-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--pd-space-4);
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--pd-space-3);
+}
+
+.preset-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pd-space-1);
+  text-align: left;
+  background: var(--pd-surface-raised);
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius);
+  padding: var(--pd-space-4);
+  color: var(--pd-text);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.preset-card:hover {
+  border-color: var(--pd-cyan);
+}
+
+.preset-card:focus-visible {
+  outline: 2px solid var(--pd-cyan);
+  outline-offset: 2px;
+}
+
+.preset-card-active {
+  border-color: var(--pd-lime);
+  box-shadow: 0 0 12px rgba(198, 255, 77, 0.25);
+}
+
+.preset-icon {
+  font-size: 1.5rem;
+}
+
+.preset-label {
+  font-family: var(--pd-font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.preset-desc {
+  font-size: 0.82rem;
+  color: var(--pd-text-muted);
+  line-height: 1.4;
+}
+
+.preset-amount {
+  margin-top: var(--pd-space-2);
+  font-weight: 700;
+  color: var(--pd-lime);
+}
+
+.field-group {
+  margin-bottom: var(--pd-space-4);
+}
+
+.hint-text {
+  color: var(--pd-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-bottom: 0;
+}
