@@ -1,11 +1,19 @@
 import "./styles/tokens.css";
 import "./styles/app.css";
 import "./styles/components.css";
+import "./styles/payment.css";
 import { useWallet } from "./hooks/useWallet";
+import { usePayment } from "./hooks/usePayment";
 import { WalletCard } from "./components/WalletCard";
+import { PaymentForm } from "./components/PaymentForm";
+import { ReceiptCard } from "./components/ReceiptCard";
 
 export default function App() {
   const wallet = useWallet();
+  const payment = usePayment(wallet.publicKey, wallet.networkOk);
+
+  const connectedAndGuarded = Boolean(wallet.publicKey) && wallet.networkOk === true;
+  const formLocked = !connectedAndGuarded || payment.receipt.status !== "idle";
 
   return (
     <div className="app-shell">
@@ -36,6 +44,12 @@ export default function App() {
 
       <main id="main" className="section-stack">
         <WalletCard wallet={wallet} onRefreshBalance={() => void wallet.refreshBalance()} />
+        <PaymentForm
+          balance={wallet.balance}
+          disabled={formLocked}
+          onSubmit={(destination, amount) => void payment.sendPayment(destination, amount)}
+        />
+        <ReceiptCard receipt={payment.receipt} onDismiss={payment.reset} />
       </main>
     </div>
   );
