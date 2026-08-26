@@ -1,0 +1,60 @@
+/*
+ * PulseDrop design tokens.
+ * Dark near-black canvas with electric lime/cyan accents.
+ */
+:root {
+  --pd-bg: #0a0c0a;
+  --pd-surface: #121511;
+  --pd-surface-raised: #191d18;
+  --pd-border: #262b25;
+  --pd-text: #e8f5e9;
+  --pd-text-muted: #8a948a;
+  --pd-lime: #c6ff4d;
+  --pd-cyan: #4defff;
+  --pd-danger: #ff5470;
+  --pd-warn: #ffc857;
+  --pd-font-display: "Arial Narrow", "Oswald", "Impact", sans-serif;
+  --pd-font-body: "Segoe UI", system-ui, sans-serif;
+  --pd-radius: 10px;
+  --pd-radius-sm: 6px;
+  --pd-space-1: 4px;
+  --pd-space-2: 8px;
+  --pd-space-3: 12px;
+  --pd-space-4: 16px;
+  --pd-space-5: 24px;
+  --pd-space-6: 32px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 500px at 80% -10%, rgba(77, 239, 255, 0.06), transparent),
+    radial-gradient(900px 400px at 10% 110%, rgba(198, 255, 77, 0.05), transparent),
+    var(--pd-bg);
+  color: var(--pd-text);
+  font-family: var(--pd-font-body);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--pd-font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}

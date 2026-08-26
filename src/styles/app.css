@@ -1,0 +1,69 @@
+/* PulseDrop application shell and component styles. */
+
+.app-shell {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: var(--pd-space-6) var(--pd-space-4) var(--pd-space-6);
+}
+
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pd-space-2);
+  padding-bottom: var(--pd-space-5);
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-3);
+}
+
+.pulse-mark {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.brand-title {
+  font-size: 1.9rem;
+  background: linear-gradient(90deg, var(--pd-lime), var(--pd-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tagline {
+  margin: 0;
+  color: var(--pd-text-muted);
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--pd-surface);
+  border: 1px solid var(--pd-border);
+  border-radius: var(--pd-radius);
+  padding: var(--pd-space-5);
+  margin-bottom: var(--pd-space-4);
+}
+
+.card-title {
+  font-size: 1.05rem;
+  margin-bottom: var(--pd-space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--pd-space-2);
+}
+
+.card-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pd-lime);
+  box-shadow: 0 0 8px var(--pd-lime);
+}
+
+.section-stack > * + * {
+  margin-top: var(--pd-space-4);
+}
