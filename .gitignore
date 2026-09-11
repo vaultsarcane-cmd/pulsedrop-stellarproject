@@ -1,7 +1,23 @@
 node_modules
 dist
-coverage
-*.local
+target
+target-gnu
 .env
-.DS_Store
-contracts/target
+.env.*
+!.env.example
+*.pem
+*.key
+*.secret
+# Include contracts source
+!contracts/**/*.rs
+!contracts/**/Cargo.toml
+!contracts/**/Cargo.lock
+# Exclude build artifacts and caches
+contracts/**/target
+contracts/**/.fingerprint
+contracts/**/build
+contracts/**/deps
+contracts/**/incremental
+contracts/**/examples
+.npm-cache
+*.tgz
