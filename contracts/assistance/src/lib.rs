@@ -1,3 +1,5 @@
+#![no_std]
+
 //! PulseDrop Assistance Request contract.
 //!
 //! Tracks urgent assistance payment requests on Stellar Testnet.

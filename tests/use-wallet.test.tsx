@@ -62,13 +62,13 @@ afterEach(() => {
 describe("useWallet lifecycle", () => {
   it("stays in the detecting phase and never reports a missing wallet while polling", async () => {
     // Extension answers only after the first detection attempts.
-    let polls = 0;
+    let _polls = 0;
     const { result } = renderHook(() => useWallet());
     expect(result.current.phase).toBe("detecting");
 
     await waitFor(
       () => {
-        polls += 1;
+        _polls += 1;
       },
       { timeout: 100 },
     );
