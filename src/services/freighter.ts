@@ -78,6 +78,13 @@ export async function connectWallet(): Promise<WalletConnectionResult> {
   try {
     const access = await import("@stellar/freighter-api").then((m) => m.requestAccess());
     if (access.error) {
+      // Freighter can report the same requestAccess error for a dismissed
+      // permission prompt and for an already-authorized but locked wallet.
+      // Preserve the actionable distinction by checking the existing grant.
+      const allowed = await isAllowed();
+      if (!allowed.error && allowed.isAllowed === true) {
+        return { ok: false, error: "WALLET_LOCKED" };
+      }
       return { ok: false, error: "ACCESS_REQUEST_REJECTED" };
     }
     if (!access.address) {
