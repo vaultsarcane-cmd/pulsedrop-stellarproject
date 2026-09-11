@@ -6,7 +6,7 @@ import { RequestForm } from "./components/RequestForm";
 import { SyncPane } from "./components/SyncPane";
 import { ReceiptCard } from "./components/ReceiptCard";
 import { usePayment } from "./hooks/usePayment";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 
 const DEFAULT_ENV: SorobanEnv = {
   rpcUrl: import.meta.env.VITE_SOROBAN_RPC_URL ?? "https://soroban-testnet.stellar.org",
@@ -23,8 +23,6 @@ export default function App() {
   const payment = usePayment(wallet.connected?.publicKey ?? null, wallet.wrongNetwork === false);
 
   const connectedAndGuarded = wallet.connected != null && wallet.wrongNetwork === false;
-
-  const [showContract, setShowContract] = useState(false);
 
   const handleCheckNetwork = useCallback(async () => {
     const ok = await wallet.checkNetwork();
@@ -83,29 +81,36 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <div className="ambient ambient-one" aria-hidden="true" />
+      <div className="ambient ambient-two" aria-hidden="true" />
       <header className="app-header">
-        <div className="brand-row">
-          <svg
-            className="pulse-mark"
-            viewBox="0 0 34 34"
-            role="img"
-            aria-label="PulseDrop logo"
-          >
-            <polyline
-              points="2,17 9,17 13,6 18,28 22,12 25,17 32,17"
-              fill="none"
-              stroke="var(--pd-lime)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <h1 className="brand-title">PulseDrop</h1>
+        <nav className="topbar" aria-label="Primary navigation">
+          <div className="brand-row">
+            <span className="brand-orbit" aria-hidden="true"><span /></span>
+            <span className="brand-title">PulseDrop</span>
+          </div>
+          <div className="network-pill"><span /> Stellar Testnet</div>
+        </nav>
+        <div className="hero-grid">
+          <div className="hero-copy">
+            <div className="eyebrow"><span>01</span> Live assistance protocol</div>
+            <h1 className="hero-title">Help moves<br /><em>at light speed.</em></h1>
+            <p className="tagline">Create transparent assistance requests, fund urgent needs and watch every pulse settle on Stellar.</p>
+            <div className="hero-meta">
+              <div><strong>~5s</strong><span>settlement</span></div>
+              <div><strong>Live</strong><span>contract events</span></div>
+              <div><strong>Multi</strong><span>wallet ready</span></div>
+            </div>
+          </div>
+          <div className="pulse-visual" aria-hidden="true">
+            <div className="pulse-core"><span className="drop-glyph">P</span></div>
+            <div className="orbit orbit-a"><i /></div>
+            <div className="orbit orbit-b"><i /></div>
+            <svg viewBox="0 0 420 170" className="wave-line"><path d="M0 90 C50 90 55 90 82 90 L102 90 L120 24 L148 146 L174 62 L194 90 C238 90 270 90 420 90" /></svg>
+            <span className="visual-label label-a">SIGNAL / ACTIVE</span>
+            <span className="visual-label label-b">LEDGER SYNC</span>
+          </div>
         </div>
-        <p className="tagline">
-          Rapid Stellar Testnet assistance payments. Pick an urgent preset, send
-          XLM in seconds.
-        </p>
       </header>
 
       <main id="main" className="section-stack">
@@ -113,11 +118,11 @@ export default function App() {
           wallet={wallet}
           onRefreshBalance={wallet.refreshBalance}
           onCheckNetwork={handleCheckNetwork}
-          onSelectContractAction={() => setShowContract((v) => !v)}
+          onSelectContractAction={() => document.getElementById("contract-workspace")?.scrollIntoView({ behavior: "smooth" })}
         />
 
-        {showContract && connectedAndGuarded && (
-          <>
+        {connectedAndGuarded ? (
+          <div id="contract-workspace" className="workspace-grid">
             <RequestForm
               creatorPublicKey={wallet.connected!.publicKey}
               networkOk={wallet.wrongNetwork === false}
@@ -129,16 +134,20 @@ export default function App() {
               contractEnv={DEFAULT_ENV}
               creatorPublicKey={wallet.connected!.publicKey}
               networkOk={wallet.wrongNetwork === false}
-              onResync={() => {
-                setShowContract(false);
-                setTimeout(() => setShowContract(true), 50);
-              }}
+              onResync={() => window.location.reload()}
             />
-          </>
+          </div>
+        ) : (
+          <section className="locked-workspace">
+            <span className="locked-number">02</span>
+            <div><p className="section-kicker">Contract workspace</p><h2>Connect. Create. Make impact.</h2><p>Your live request studio unlocks after a Testnet wallet is connected.</p></div>
+            <div className="locked-pulse" aria-hidden="true"><span /><span /><span /></div>
+          </section>
         )}
 
         <ReceiptCard receipt={payment.receipt} onDismiss={payment.reset} />
       </main>
+      <footer className="app-footer"><span>PulseDrop / Soroban</span><span>Built on Stellar · Testnet only</span></footer>
     </div>
   );
 }
