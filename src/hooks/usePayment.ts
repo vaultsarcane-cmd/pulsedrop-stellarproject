@@ -26,13 +26,10 @@ export interface PaymentApi {
   receipt: PaymentReceiptState;
   sendPayment: (destination: string, amount: string) => Promise<void>;
   reset: () => void;
+  sendPaymentResult: (state: PaymentReceiptState) => void;
 }
 
-/**
- * Drives the full XLM Testnet payment lifecycle.
- * A module-level ref guards against duplicate submissions while a
- * transaction is still pending.
- */
+/** Drives the full XLM Testnet payment lifecycle. */
 export function usePayment(
   sourcePublicKey: string | null,
   networkOk: boolean | null,
@@ -43,7 +40,7 @@ export function usePayment(
   const sendPayment = useCallback(
     async (destination: string, amount: string) => {
       if (!sourcePublicKey || networkOk !== true) return;
-      if (inFlightRef.current) return; // duplicate-click guard
+      if (inFlightRef.current) return;
       inFlightRef.current = true;
 
       setReceipt({ status: "pending", hash: null, explorerUrl: null, message: null });
@@ -101,7 +98,11 @@ export function usePayment(
     setReceipt(INITIAL_STATE);
   }, []);
 
-  return { receipt, sendPayment, reset };
+  const sendPaymentResult = useCallback((state: PaymentReceiptState) => {
+    setReceipt(state);
+  }, []);
+
+  return { receipt, sendPayment, reset, sendPaymentResult };
 }
 
 function describeSubmissionError(code: string): string {
