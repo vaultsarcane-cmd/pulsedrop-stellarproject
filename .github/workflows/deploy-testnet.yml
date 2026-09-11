@@ -62,7 +62,7 @@ jobs:
           CONTRACT_ID: ${{ steps.deploy.outputs.contract_id }}
         run: |
           start_ledger="$(stellar ledger latest --network testnet --output json | jq -r '.sequence // .sequenceNumber // .id')"
-          stellar contract invoke \
+          invoke_output="$(stellar contract invoke \
             --id "$CONTRACT_ID" \
             --source-account pulsedrop-ci \
             --network testnet \
@@ -71,10 +71,11 @@ jobs:
             --recipient "$DEPLOYER_ADDRESS" \
             --amount 10000000 \
             --category transit \
-            --expiry_ledgers 1000
+            --expiry_ledgers 1000 2>&1)"
+          printf '%s\n' "$invoke_output"
           events="$(stellar events --id "$CONTRACT_ID" --start-ledger "$start_ledger" --count 1 --output json --network testnet)"
           printf '%s\n' "$events" > contract-call-event.json
-          tx_hash="$(printf '%s' "$events" | jq -r '.. | .txHash? // .tx_hash? // empty' | head -n 1)"
+          tx_hash="$(printf '%s' "$invoke_output" | grep -Eo '/tx/[0-9a-fA-F]{64}' | tail -n 1 | cut -d/ -f3)"
           if [[ ! "$tx_hash" =~ ^[0-9a-fA-F]{64}$ ]]; then
             echo "The contract call succeeded, but its transaction hash could not be parsed from the event." >&2
             exit 1
