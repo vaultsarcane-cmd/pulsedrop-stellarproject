@@ -1,8 +1,10 @@
-# Screenshot placeholders
+# Submission screenshots
 
-Capture the following during manual Testnet verification and save them here
-with these exact names, then update README.md:
+Screenshots are grouped by submission level:
 
-1. wallet-connected.png - Freighter connected, abbreviated key and XLM balance visible
-2. payment-preset.png   - A preset selected with a valid recipient entered
-3. receipt-success.png  - Success receipt showing transaction hash and explorer link
+- `white belt/` preserves the classic XLM payment flow.
+- `yellow belt/` documents the multi-wallet UI, contract form, signed contract
+  call, synchronized requests, and successful Stellar Expert verification.
+
+No secret keys or recovery phrases are included; displayed account addresses
+are public Stellar Testnet addresses.

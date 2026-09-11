@@ -100,20 +100,29 @@ handed to Freighter for signing, and only the signed envelope is submitted.
 
 ## Screenshots
 
-![Wallet connected with balance](docs/screenshots/wallet-connected.png)
-_Freighter connected on Stellar Testnet with the public key and XLM balance visible._
+### Yellow Belt — contract and multi-wallet flow
 
-![Payment form with preset selected](docs/screenshots/payment-preset.png)
-_Transit assistance preset selected with a validated Testnet recipient._
+![PulseDrop hero](docs/screenshots/yellow%20belt/hero-home.png)
+_The redesigned PulseDrop live-assistance dashboard._
 
-![Freighter transaction confirmation](docs/screenshots/payment-submitting.png)
-_Freighter confirmation and PulseDrop's submitting state during the live payment._
+![Multi-wallet options](docs/screenshots/yellow%20belt/wallet-options.png)
+_Multiple Stellar wallet providers available through Stellar Wallets Kit._
 
-![Successful payment receipt](docs/screenshots/receipt-success.png)
-_Successful Testnet receipt with the transaction hash and explorer action._
+![Wallet connected](docs/screenshots/yellow%20belt/wallet-connected.png)
+_Freighter connected on Testnet with address, balance, and network status visible._
 
-![Successful transaction on Stellar Expert](docs/screenshots/stellar-payment-hash.png)
-_The same payment independently verified as successful on Stellar Expert._
+![Contract request form](docs/screenshots/yellow%20belt/contract-request-form.png)
+_Assistance contract form and synchronized on-chain requests._
+
+![Contract transaction confirmation](docs/screenshots/yellow%20belt/contract-transaction-success.png)
+_A real contract write awaiting confirmation in Freighter._
+
+![Successful contract call on Stellar Expert](docs/screenshots/yellow%20belt/contract-explorer.png)
+_The resulting `create_request` contract call independently verified as successful._
+
+### White Belt — classic payment flow
+
+Earlier payment-flow screenshots are preserved in [`docs/screenshots/white belt`](docs/screenshots/white%20belt/).
 
 ## Verified Example Transaction
 
