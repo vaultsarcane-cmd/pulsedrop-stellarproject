@@ -1,0 +1,109 @@
+name: Deploy contract to Testnet
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "deploy-testnet-*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pulsedrop-testnet-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build, test, and deploy
+    runs-on: ubuntu-latest
+    environment: testnet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: stellar/stellar-cli@v27.0.0
+
+      - name: Test contract
+        working-directory: contracts/assistance
+        run: cargo test --locked
+
+      - name: Build optimized WASM
+        working-directory: contracts/assistance
+        run: stellar contract build
+
+      - name: Create funded ephemeral Testnet deployer
+        run: |
+          stellar keys generate pulsedrop-ci --network testnet --fund
+          echo "DEPLOYER_ADDRESS=$(stellar keys public-key pulsedrop-ci)" >> "$GITHUB_ENV"
+
+      - name: Deploy to Stellar Testnet
+        id: deploy
+        shell: bash
+        run: |
+          output="$(stellar contract deploy \
+            --wasm contracts/assistance/target/wasm32v1-none/release/pulsedrop_assistance.wasm \
+            --source-account pulsedrop-ci \
+            --network testnet)"
+          contract_id="$(printf '%s' "$output" | grep -Eo 'C[A-Z2-7]{55}' | tail -n 1)"
+          if [[ -z "$contract_id" ]]; then
+            echo "Deployment completed but no contract ID was found in Stellar CLI output." >&2
+            exit 1
+          fi
+          echo "Deployed contract: $contract_id"
+          echo "contract_id=$contract_id" >> "$GITHUB_OUTPUT"
+          printf 'VITE_CONTRACT_ID=%s\nVITE_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org\n' "$contract_id" > pulsedrop-testnet.env
+
+      - name: Verify a real contract write and capture its event
+        id: verify
+        shell: bash
+        env:
+          CONTRACT_ID: ${{ steps.deploy.outputs.contract_id }}
+        run: |
+          start_ledger="$(stellar ledger latest --network testnet --output json | jq -r '.sequence // .sequenceNumber // .id')"
+          stellar contract invoke \
+            --id "$CONTRACT_ID" \
+            --source-account pulsedrop-ci \
+            --network testnet \
+            -- create_request \
+            --creator "$DEPLOYER_ADDRESS" \
+            --recipient "$DEPLOYER_ADDRESS" \
+            --amount 10000000 \
+            --category transit \
+            --expiry_ledgers 1000
+          events="$(stellar events --id "$CONTRACT_ID" --start-ledger "$start_ledger" --count 1 --output json --network testnet)"
+          printf '%s\n' "$events" > contract-call-event.json
+          tx_hash="$(printf '%s' "$events" | jq -r '.. | .txHash? // .tx_hash? // empty' | head -n 1)"
+          if [[ ! "$tx_hash" =~ ^[0-9a-fA-F]{64}$ ]]; then
+            echo "The contract call succeeded, but its transaction hash could not be parsed from the event." >&2
+            exit 1
+          fi
+          echo "Verified contract-call transaction: $tx_hash"
+          echo "tx_hash=$tx_hash" >> "$GITHUB_OUTPUT"
+
+      - name: Publish deployment summary
+        env:
+          CONTRACT_ID: ${{ steps.deploy.outputs.contract_id }}
+          TX_HASH: ${{ steps.verify.outputs.tx_hash }}
+        run: |
+          {
+            echo "## PulseDrop Testnet deployment"
+            echo
+            echo "- Contract ID: \`$CONTRACT_ID\`"
+            echo "- Explorer: https://stellar.expert/explorer/testnet/contract/$CONTRACT_ID"
+            echo "- Verified contract-call transaction: \`$TX_HASH\`"
+            echo "- Transaction explorer: https://stellar.expert/explorer/testnet/tx/$TX_HASH"
+            echo
+            echo "Download the environment artifact and set \`VITE_CONTRACT_ID\` in the frontend host."
+            echo "Make one signed frontend contract call and copy its transaction hash into README before submission."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pulsedrop-testnet-deployment
+          path: |
+            pulsedrop-testnet.env
+            contract-call-event.json
+            contracts/assistance/target/wasm32v1-none/release/pulsedrop_assistance.wasm
+          if-no-files-found: error

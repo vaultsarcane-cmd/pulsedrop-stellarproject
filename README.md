@@ -11,7 +11,8 @@ recipient's wallet with a clearly explained pending/success/failure receipt.
 
 ## Features
 
-- Freighter wallet detection, connection, and disconnection
+- Multi-wallet connection through Stellar Wallets Kit v2 (Freighter, Albedo,
+  xBull, Rabet, LOBSTR, and other supported providers)
 - Explicit Testnet network guard that locks payments until Freighter is on Testnet
 - Live XLM balance display with refresh action
 - Three urgent assistance presets plus a custom amount mode
@@ -53,9 +54,15 @@ Open `http://localhost:5173` in the browser where Freighter is installed.
 
 ## Environment Variables
 
-No environment variables are required. The Horizon Testnet endpoint
-(`https://horizon-testnet.stellar.org`) is hard-coded by design so the app can
-never accidentally target Mainnet.
+Copy `.env.example` to `.env` after deploying the contract:
+
+```env
+VITE_CONTRACT_ID=C...YOUR_TESTNET_CONTRACT_ID
+VITE_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+```
+
+The application deliberately refuses contract calls while the placeholder ID
+is configured. Classic XLM payments remain Testnet-only.
 
 ## Available Scripts
 
@@ -78,7 +85,9 @@ src/
 │   ├── usePayment.ts            # Build/sign/submit lifecycle + receipt state
 │   └── useCopyToClipboard.ts    # Copy feedback for the public key
 ├── services/
-│   ├── freighter.ts  # Typed wrapper over the injected Freighter API
+│   ├── walletSelector.ts # Stellar Wallets Kit v2 connection/signing state
+│   ├── contract.ts   # Soroban RPC simulation, signing, submission, events
+│   ├── freighter.ts  # Legacy direct-payment signing wrapper
 │   └── horizon.ts    # Balance lookup + payment submission via stellar-sdk
 ├── lib/
 │   ├── presets.ts    # Assistance presets + input validation rules
@@ -112,6 +121,39 @@ A real Testnet payment made during manual verification:
 
 - Transaction hash: `6c0b4e0ae29acdd89a3a701d170bab437827f2ee945f360594be32969c145bba`
 - Explorer link: [View the successful Testnet payment on Stellar Expert](https://stellar.expert/explorer/testnet/tx/6c0b4e0ae29acdd89a3a701d170bab437827f2ee945f360594be32969c145bba)
+
+## Contract build and deployment
+
+Install the current Stellar CLI, then run:
+
+```bash
+stellar contract build --manifest-path contracts/assistance/Cargo.toml
+stellar keys generate pulsedrop-deployer --network testnet --fund
+stellar contract deploy \
+  --wasm target/wasm32v1-none/release/pulsedrop_assistance.wasm \
+  --source-account pulsedrop-deployer \
+  --network testnet
+```
+
+Put the returned `C...` address in `.env`, make one contract call from the UI,
+then replace the pending transaction entry above with its Stellar Expert link.
+
+### Deploy without installing Stellar CLI locally
+
+The repository includes two GitHub Actions workflows:
+
+- `CI` runs frontend tests, lint, production build, Rust tests, and the contract
+  WASM build on every push and pull request.
+- `Deploy contract to Testnet` is a manual workflow that builds and deploys the
+  contract from an Ubuntu runner.
+
+Run **Actions → Deploy contract to Testnet → Run workflow**, or push a tag named
+`deploy-testnet-*`. The workflow generates and funds an ephemeral Testnet-only
+deployer on the runner, deploys the contract, performs one authenticated write,
+and extracts its transaction hash from the emitted event. The run summary shows
+the contract and transaction Explorer links. Its artifact contains the optimized
+WASM, decoded event, and a ready-to-copy `pulsedrop-testnet.env` file. No secret
+is required and no deployer key is retained after the runner is destroyed.
 
 ## Troubleshooting
 

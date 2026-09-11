@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
+
+  contract:
+    name: Contract checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts/assistance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: stellar/stellar-cli@v27.0.0
+      - run: cargo test --locked
+      - run: stellar contract build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pulsedrop-assistance-wasm
+          path: contracts/assistance/target/wasm32v1-none/release/pulsedrop_assistance.wasm
+          if-no-files-found: error
