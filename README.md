@@ -54,15 +54,15 @@ Open `http://localhost:5173` in the browser where Freighter is installed.
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` after deploying the contract:
+Copy `.env.example` to `.env` (the verified Testnet deployment is already included):
 
 ```env
-VITE_CONTRACT_ID=C...YOUR_TESTNET_CONTRACT_ID
+VITE_CONTRACT_ID=CA67LHULSLWR6NNSUBVWSJTJOISRFSUZNPXGRIGN42DFDQEOQ5JCTGVX
 VITE_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
 ```
 
-The application deliberately refuses contract calls while the placeholder ID
-is configured. Classic XLM payments remain Testnet-only.
+You can override the contract ID for a later deployment. Classic XLM payments
+and contract calls remain Testnet-only.
 
 ## Available Scripts
 
@@ -124,6 +124,14 @@ A real Testnet payment made during manual verification:
 
 ## Contract build and deployment
 
+The assistance contract is deployed and verified on Stellar Testnet:
+
+- Contract ID: `CA67LHULSLWR6NNSUBVWSJTJOISRFSUZNPXGRIGN42DFDQEOQ5JCTGVX`
+- [View the contract on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CA67LHULSLWR6NNSUBVWSJTJOISRFSUZNPXGRIGN42DFDQEOQ5JCTGVX)
+- Verified contract-call transaction: `ad1ff48f6024742b6c7219398219db003fce066174ca61831c64127a5abd56ac`
+- [View the contract call on Stellar Expert](https://stellar.expert/explorer/testnet/tx/ad1ff48f6024742b6c7219398219db003fce066174ca61831c64127a5abd56ac)
+- [Successful deployment workflow](https://github.com/vaultsarcane-cmd/pulsedrop-stellarproject/actions/runs/34578819193)
+
 Install the current Stellar CLI, then run:
 
 ```bash
@@ -135,8 +143,7 @@ stellar contract deploy \
   --network testnet
 ```
 
-Put the returned `C...` address in `.env`, make one contract call from the UI,
-then replace the pending transaction entry above with its Stellar Expert link.
+Put the returned `C...` address in `.env` when deploying a replacement contract.
 
 ### Deploy without installing Stellar CLI locally
 

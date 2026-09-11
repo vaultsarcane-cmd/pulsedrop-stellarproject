@@ -7,9 +7,10 @@ import type { xdr } from "@stellar/stellar-sdk";
 
 export interface SorobanEnv { rpcUrl: string; contractId: string }
 const FALLBACK_CONTRACT_ID = "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYBCU";
+const DEPLOYED_TESTNET_CONTRACT_ID = "CA67LHULSLWR6NNSUBVWSJTJOISRFSUZNPXGRIGN42DFDQEOQ5JCTGVX";
 const DEFAULT_ENV: SorobanEnv = {
   rpcUrl: import.meta.env.VITE_SOROBAN_RPC_URL ?? "https://soroban-testnet.stellar.org",
-  contractId: import.meta.env.VITE_CONTRACT_ID ?? FALLBACK_CONTRACT_ID,
+  contractId: import.meta.env.VITE_CONTRACT_ID ?? DEPLOYED_TESTNET_CONTRACT_ID,
 };
 export const isContractConfigured = (env: SorobanEnv) => env.contractId !== FALLBACK_CONTRACT_ID;
 

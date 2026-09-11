@@ -10,7 +10,7 @@ import { useState, useCallback } from "react";
 
 const DEFAULT_ENV: SorobanEnv = {
   rpcUrl: import.meta.env.VITE_SOROBAN_RPC_URL ?? "https://soroban-testnet.stellar.org",
-  contractId: import.meta.env.VITE_CONTRACT_ID ?? "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYBCU",
+  contractId: import.meta.env.VITE_CONTRACT_ID ?? "CA67LHULSLWR6NNSUBVWSJTJOISRFSUZNPXGRIGN42DFDQEOQ5JCTGVX",
 };
 
 export default function App() {
